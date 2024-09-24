@@ -9,6 +9,7 @@ pluginManagement {
             }
         }
         gradlePluginPortal()
+        maven("https://repo.eclipse.org/content/repositories/paho-releases/")
     }
 }
 dependencyResolutionManagement {
@@ -16,9 +17,10 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         google()
+        maven("https://repo.eclipse.org/content/repositories/paho-releases/")
     }
 }
 
 rootProject.name = "MQTTSample"
 include(":app")
-//include(":mqtt")
+include(":mqttservice")

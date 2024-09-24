@@ -2,6 +2,7 @@ package com.mqtt.tessol
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -36,8 +37,14 @@ class MainActivity : ComponentActivity() {
         const val TAG = "MainActivity"
     }
 
+    var counter = 1
+
+    val clientId = MqttClient.generateClientId()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mqttClient = MqttAndroidClient(applicationContext, "tcp://broker.hivemq.com:1883", clientId)
+
         enableEdgeToEdge()
         setContent {
             MQTTSampleTheme {
@@ -72,7 +79,10 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Button(
-                                onClick = { publish("First message from app") },
+                                onClick = {
+                                    publish("$counter message from app")
+                                    counter++
+                                },
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text(text = "Publish message to MQTT")
@@ -103,10 +113,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun connectMqtt() {
-        val clientId = MqttClient.generateClientId()
         Log.d(TAG, clientId)
         try {
-            mqttClient = MqttAndroidClient(applicationContext, "tcp://broker.hivemq.com:1883", clientId)
             val token = mqttClient.connect()
             token.actionCallback = object : IMqttActionListener {
                 override fun onSuccess(asyncActionToken: IMqttToken?) {
@@ -129,6 +137,11 @@ class MainActivity : ComponentActivity() {
                         "MQTT",
                         "message arrived on topic " + topic + "  message:" + message?.toString()
                     )
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Message from server ${message?.toString()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
 
                 override fun deliveryComplete(token: IMqttDeliveryToken?) {
@@ -145,6 +158,7 @@ class MainActivity : ComponentActivity() {
     }
 
     fun subscribe() {
+        if (::mqttClient.isInitialized.not()) return
         val token = mqttClient.subscribe(topic, 1) ?: return
         token.actionCallback = object : IMqttActionListener {
             override fun onSuccess(asyncActionToken: IMqttToken?) {
@@ -158,6 +172,7 @@ class MainActivity : ComponentActivity() {
     }
 
     fun publish(payload: String) {
+        if (::mqttClient.isInitialized.not()) return
         val message = MqttMessage()
         message.payload = payload.toByteArray()
         message.qos = 1
@@ -180,7 +195,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun unsubscribe() {
-        mqttClient.unsubscribe(topic)
+        if (::mqttClient.isInitialized)
+            mqttClient.unsubscribe(topic)
     }
 
     private fun disconnectMqtt() {
@@ -195,11 +211,9 @@ class MainActivity : ComponentActivity() {
                     Log.d("MQTT", "disconnect failed");
                 }
             }
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             e.printStackTrace()
-        }
-        catch (e: MqttException) {
+        } catch (e: MqttException) {
             e.printStackTrace()
         }
     }

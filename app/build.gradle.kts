@@ -50,6 +50,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":mqttservice"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -69,7 +70,7 @@ dependencies {
 
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation(libs.org.eclipse.paho.client.mqttv3)
-    implementation(libs.org.eclipse.paho.android.service)
+//    implementation(libs.org.eclipse.paho.android.service)
 
 
 }
